@@ -10,8 +10,7 @@ export const devices: {[key: string]: DeckInfo} = {
     keyFlip: [false, true],
     keyRotation: 90,
     imageFormat: 'BMP',
-    reportLength: 1024,
-    reportHeaderLength: 16,
+    reportSize: [1024, 16],
     firmwareFeature: [0x04, 17, 5]
   },
   original: {
@@ -23,8 +22,7 @@ export const devices: {[key: string]: DeckInfo} = {
     keyFlip: [true, true],
     keyRotation: 0,
     imageFormat: 'BMP',
-    reportLength: 1024,
-    reportHeaderLength: 16,
+    reportSize: [8191, 16],
     firmwareFeature: [0x04, 17, 5]
   },
   mk2: {
@@ -36,8 +34,7 @@ export const devices: {[key: string]: DeckInfo} = {
     keyFlip: [true, true],
     keyRotation: 0,
     imageFormat: 'JPEG',
-    reportLength: 1024,
-    reportHeaderLength: 8,
+    reportSize: [1024, 8],
     firmwareFeature: [0x05, 32, 6]
   },
   xl: {
@@ -49,8 +46,7 @@ export const devices: {[key: string]: DeckInfo} = {
     keyFlip: [true, true],
     keyRotation: 0,
     imageFormat: 'JPEG',
-    reportLength: 1024,
-    reportHeaderLength: 8,
+    reportSize: [1024, 8],
     firmwareFeature: [0x05, 32, 6]
   }
 } as const;

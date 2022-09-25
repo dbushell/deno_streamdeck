@@ -7,8 +7,7 @@ export interface DeckInfo {
   readonly keyFlip: readonly [boolean, boolean];
   readonly keyRotation: number;
   readonly imageFormat: 'JPEG' | 'BMP';
-  readonly reportLength: number;
-  readonly reportHeaderLength: number;
+  readonly reportSize: readonly [number, number];
   readonly firmwareFeature: readonly [number, number, number];
   firmware?: string;
 }

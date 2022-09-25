@@ -113,12 +113,10 @@ export class StreamDeck extends EventTarget {
     // Find and setup device through enumeration
     const {vendorId, productId} = this.info;
     const devices = HID.enumerate(vendorId, productId);
-    const found = devices.find((device) => {
-      if (device.vendorId === vendorId && device.productId === productId) {
+    const found = devices.find((hidInfo) => {
+      if (hidInfo.vendorId === vendorId && hidInfo.productId === productId) {
         this.#hid = HID.open(vendorId, productId);
-        this.#hidInfo = {
-          ...device
-        };
+        this.#hidInfo = {...hidInfo};
         return true;
       }
     });

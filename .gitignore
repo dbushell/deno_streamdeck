@@ -3,6 +3,9 @@
 !LICENSE
 !README.md
 !mod.ts
+!examples/
+examples/*
+!examples/*.ts
 !src/
 src/*
 !src/*.ts
