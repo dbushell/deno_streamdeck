@@ -1,4 +1,4 @@
-# 🦕 Deno StreamDeck
+# 🦕 Deno Stream Deck
 
 Deno library for Stream Deck. The Elgato USB device (not the Steam Deck gaming thing).
 
