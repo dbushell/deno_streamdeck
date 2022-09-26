@@ -18,6 +18,10 @@ streamDeck.addEventListener('disconnect', () => {
   console.log('Stream Deck disconnected (auto-reconnect)');
 });
 
+streamDeck.addEventListener('keystates', () => {
+  console.log('Stream Deck key states updated');
+});
+
 await new Promise((resolve) => {
   streamDeck.addEventListener(
     'open',
@@ -44,6 +48,11 @@ setTimeout(() => {
   streamDeck.brightness(100);
   const {pathname} = new URL('72x72.jpg', import.meta.url);
   streamDeck.setKeyJpeg(7, pathname);
+  streamDeck.readKeys().then((success) => {
+    if (success) {
+      console.log(streamDeck.keyStates);
+    }
+  });
 }, 2000);
 
 await new Promise((resolve) => {

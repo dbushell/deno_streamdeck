@@ -274,4 +274,26 @@ export class StreamDeck extends EventTarget {
     }
     return newData;
   }
+
+  /**
+   * Wait for Stream Deck key input and update key states
+   * (`keystates` event is dispatched on input)
+   * @returns true if key states were updated
+   */
+  async readKeys() {
+    try {
+      const read = await HID.read(
+        this.hid,
+        this.info.keyStateOffset + this.keyCount
+      );
+      read.subarray(4).forEach((value, i) => {
+        this.#keyStates[i] = Boolean(value);
+      });
+      this.dispatchEvent(new CustomEvent('keystates'));
+      return true;
+    } catch {
+      // Device was probably disconnected
+      return false;
+    }
+  }
 }

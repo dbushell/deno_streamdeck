@@ -12,7 +12,8 @@ export interface DeckInfo {
   readonly keySize: readonly [number, number];
   readonly keyFlip: readonly [boolean, boolean];
   readonly keyRotation: number;
-  readonly imageFormat: 'JPEG' | 'BMP';
+  readonly keyStateOffset: number;
+  readonly keyImageFormat: 'JPEG' | 'BMP';
   readonly reportSize: readonly [number, number];
   readonly firmwareReport: DeckInfoReport;
   readonly resetReport: DeckInfoReport;
