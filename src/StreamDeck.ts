@@ -353,14 +353,8 @@ export class StreamDeck extends EventTarget {
         } else {
           // End time event if key was released
           if (this.#keyStates[key]) {
-            events.push(
-              new CustomEvent('keyup', {
-                detail: {
-                  key,
-                  delay: performance.now() - this.#keyStates[key]
-                }
-              })
-            );
+            const delay = performance.now() - this.#keyStates[key];
+            events.push(new CustomEvent('keyup', {detail: {key, delay}}));
           }
           this.#keyStates[key] = 0;
         }
