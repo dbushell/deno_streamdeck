@@ -30,13 +30,15 @@ await new Promise((resolve) => {
 setTimeout(() => {
   console.log('Test reopen without close');
   streamDeck.open();
-}, 2000);
+}, 1000);
 
 setTimeout(() => {
   console.log('Test immediate close and reopen');
   console.log('close:', streamDeck.close());
   streamDeck.open();
-}, 4000);
+  streamDeck.reset();
+  streamDeck.brightness(100);
+}, 2000);
 
 await new Promise((resolve) => {
   setTimeout(resolve, 60000);

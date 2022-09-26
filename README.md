@@ -4,7 +4,9 @@ Deno library for Stream Deck. The Elgato USB device (not the Steam Deck gaming t
 
 Built with [Deno USB HID API](https://github.com/dbushell/deno_usbhidapi). See requirements for the HIDAPI dynamic library.
 
-Work in progress coming soon...
+## Supported devices
+
+I've only tested the **Stream Deck MK.2**. I have no plans to test other devices unless you'd like to buy me one! The XL should work. Device info for the Original and Mini is provided but they require Bitmap in place of JPEG.
 
 ## Resources
 

@@ -1,3 +1,9 @@
+export type DeckInfoReport = readonly [
+  length: number,
+  offset: number,
+  ...data: number[]
+];
+
 export interface DeckInfo {
   readonly vendorId: number;
   readonly productId: number;
@@ -8,6 +14,8 @@ export interface DeckInfo {
   readonly keyRotation: number;
   readonly imageFormat: 'JPEG' | 'BMP';
   readonly reportSize: readonly [number, number];
-  readonly firmwareFeature: readonly [number, number, number];
+  readonly firmwareReport: DeckInfoReport;
+  readonly resetReport: DeckInfoReport;
+  readonly brightnessReport: DeckInfoReport;
   firmware?: string;
 }

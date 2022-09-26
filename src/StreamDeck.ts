@@ -152,12 +152,12 @@ export class StreamDeck extends EventTarget {
 
   #onOpen() {
     // Get firmware from feature report
-    const [id, length, offset] = this.info.firmwareFeature;
-    const firmware = new Uint8Array(length);
-    firmware[0] = id;
-    HID.getFeatureReport(this.hid, firmware);
+    const [length, offset, ...arr] = this.info.firmwareReport;
+    const data = new Uint8Array(length);
+    data.set(arr, 0);
+    HID.getFeatureReport(this.hid, data);
     this.#info.firmware = new TextDecoder().decode(
-      firmware.subarray(offset, firmware.indexOf(0))
+      data.subarray(offset, data.indexOf(0))
     );
     // Start poll interval to auto-reconnect
     this.#conInterval = setInterval(() => {
@@ -170,5 +170,26 @@ export class StreamDeck extends EventTarget {
 
   #onClose() {
     // Do nothing...
+  }
+
+  /**
+   * Reset the Stream Deck
+   */
+  reset() {
+    const [length, , ...arr] = this.info.resetReport;
+    const data = new Uint8Array(length);
+    data.set(arr, 0);
+    HID.sendFeatureReport(this.hid, data);
+  }
+
+  /**
+   * Set Stream Deck display brightness
+   * @param percent brightness percentage (0–100)
+   */
+  brightness(percent: number) {
+    const [length, , ...arr] = this.info.brightnessReport;
+    const data = new Uint8Array(length);
+    data.set([...arr, Math.max(0, Math.min(100, percent))], 0);
+    HID.sendFeatureReport(this.hid, data);
   }
 }
