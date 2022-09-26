@@ -78,7 +78,7 @@ export class StreamDeck extends EventTarget {
   }
 
   get keyStates(): boolean[] {
-    return this.#keyStates;
+    return [...this.#keyStates];
   }
 
   get keyBlank(): Uint8Array {
@@ -105,7 +105,7 @@ export class StreamDeck extends EventTarget {
    * Initialize HIDAPI and open the Stream Deck device
    * (`open` event is dispatched on connection)
    */
-  open() {
+  open(): void {
     // Ensure previous device is closed
     this.close();
     // Initialize HID
@@ -135,7 +135,7 @@ export class StreamDeck extends EventTarget {
    * (`close` event is dispatched on disconnection)
    * @returns true if the connected device was closed
    */
-  close() {
+  close(): boolean {
     clearTimeout(this.#conTimeout);
     clearInterval(this.#conInterval);
     const wasConnected = this.isConnected;
@@ -175,7 +175,7 @@ export class StreamDeck extends EventTarget {
   /**
    * Reset the Stream Deck
    */
-  reset() {
+  reset(): void {
     const [length, , ...arr] = this.info.resetReport;
     const data = new Uint8Array(length);
     data.set(arr, 0);
@@ -186,7 +186,7 @@ export class StreamDeck extends EventTarget {
    * Set Stream Deck display brightness
    * @param percent brightness percentage (0–100)
    */
-  brightness(percent: number) {
+  brightness(percent: number): void {
     const [length, , ...arr] = this.info.brightnessReport;
     const data = new Uint8Array(length);
     data.set([...arr, Math.max(0, Math.min(100, percent))], 0);
@@ -198,7 +198,7 @@ export class StreamDeck extends EventTarget {
    * @param key 0-based key index
    * @param data raw 32-bit RGBA image data
    */
-  setKeyData(key: number, data: Uint8Array) {
+  setKeyData(key: number, data: Uint8Array): void {
     if (key < 0 || key >= this.keyCount) {
       throw new RangeError('Key index out of range');
     }
@@ -233,7 +233,7 @@ export class StreamDeck extends EventTarget {
    * @param key 0-based key index
    * @param path full path to the JPEG image file
    */
-  setKeyJpeg(key: number, path: string) {
+  setKeyJpeg(key: number, path: string): void {
     // Decode the JPEG file
     const file = Deno.readFileSync(path);
     const jpeg = JPEG.decode(file);
@@ -249,7 +249,7 @@ export class StreamDeck extends EventTarget {
    * @param data raw 32-bit RGBA image data
    * @returns data flipped as needed
    */
-  flipKeyData(data: Uint8Array) {
+  flipKeyData(data: Uint8Array): Uint8Array {
     if (this.keyFlip.indexOf(true)) {
       return data;
     }
@@ -280,7 +280,7 @@ export class StreamDeck extends EventTarget {
    * (`keystates` event is dispatched on input)
    * @returns true if key states were updated
    */
-  async readKeys() {
+  async readKeys(): Promise<boolean> {
     try {
       const read = await HID.read(
         this.hid,
@@ -294,6 +294,17 @@ export class StreamDeck extends EventTarget {
     } catch {
       // Device was probably disconnected
       return false;
+    }
+  }
+
+  /**
+   * Wait for Stream Deck key input and yield key states
+   * @yields key states
+   */
+  async *listenKeys(): AsyncGenerator<boolean[]> {
+    while (this.isOpen) {
+      const success = await this.readKeys();
+      if (success) yield this.keyStates;
     }
   }
 }

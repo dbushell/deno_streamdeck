@@ -48,12 +48,19 @@ setTimeout(() => {
   streamDeck.brightness(100);
   const {pathname} = new URL('72x72.jpg', import.meta.url);
   streamDeck.setKeyJpeg(7, pathname);
-  streamDeck.readKeys().then((success) => {
-    if (success) {
-      console.log(streamDeck.keyStates);
-    }
-  });
 }, 2000);
+
+setTimeout(async () => {
+  console.log('Test read keys');
+  const success = await streamDeck.readKeys();
+  if (success) {
+    console.log(streamDeck.keyStates);
+  }
+  console.log('Test listen keys');
+  for await (const states of streamDeck.listenKeys()) {
+    console.log(states);
+  }
+}, 4000);
 
 await new Promise((resolve) => {
   setTimeout(resolve, 60000);
