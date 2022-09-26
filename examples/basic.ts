@@ -14,6 +14,10 @@ streamDeck.addEventListener('close', () => {
   console.log('Stream Deck closed');
 });
 
+streamDeck.addEventListener('disconnect', () => {
+  console.log('Stream Deck disconnected (auto-reconnect)');
+});
+
 await new Promise((resolve) => {
   streamDeck.addEventListener(
     'open',
@@ -38,6 +42,8 @@ setTimeout(() => {
   streamDeck.open();
   streamDeck.reset();
   streamDeck.brightness(100);
+  const {pathname} = new URL('72x72.jpg', import.meta.url);
+  streamDeck.setKeyJpeg(7, pathname);
 }, 2000);
 
 await new Promise((resolve) => {

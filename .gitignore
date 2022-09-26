@@ -6,6 +6,7 @@
 !examples/
 examples/*
 !examples/*.ts
+!examples/*.jpg
 !src/
 src/*
 !src/*.ts

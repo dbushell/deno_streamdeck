@@ -162,7 +162,7 @@ export class StreamDeck extends EventTarget {
     // Start poll interval to auto-reconnect
     this.#conInterval = setInterval(() => {
       if (!this.isConnected) {
-        console.log('Stream Deck disconnected');
+        this.dispatchEvent(new CustomEvent('disconnect'));
         this.open();
       }
     }, this.#conRate);
@@ -191,5 +191,87 @@ export class StreamDeck extends EventTarget {
     const data = new Uint8Array(length);
     data.set([...arr, Math.max(0, Math.min(100, percent))], 0);
     HID.sendFeatureReport(this.hid, data);
+  }
+
+  /**
+   * Set an individual Stream Deck key image
+   * @param key 0-based key index
+   * @param data raw 32-bit RGBA image data
+   */
+  setKeyData(key: number, data: Uint8Array) {
+    if (key < 0 || key >= this.keyCount) {
+      throw new RangeError('Key index out of range');
+    }
+    const [reportLength, headerLength] = this.#info.reportSize;
+    const maxLength = reportLength - headerLength;
+    let count = 0;
+    let remaining = data.length;
+    while (remaining > 0) {
+      const length = Math.min(remaining, maxLength);
+      const sent = count * maxLength;
+      const header = Uint8Array.from([
+        0x02,
+        0x07,
+        key,
+        length === remaining ? 1 : 0,
+        length & 0xff,
+        length >> 8,
+        count & 0xff,
+        count >> 8
+      ]);
+      const payload = new Uint8Array(reportLength);
+      payload.set(header);
+      payload.set(data.subarray(sent, sent + length), header.length);
+      HID.write(this.hid, payload);
+      remaining -= length;
+      count++;
+    }
+  }
+
+  /**
+   * Set an individual Stream Deck key image
+   * @param key 0-based key index
+   * @param path full path to the JPEG image file
+   */
+  setKeyJpeg(key: number, path: string) {
+    // Decode the JPEG file
+    const file = Deno.readFileSync(path);
+    const jpeg = JPEG.decode(file);
+    // Flip the image as per the device
+    let data = this.flipKeyData(jpeg.data);
+    // Always re-encode to ensure correct format
+    data = JPEG.encode({...jpeg, data}, 100).data;
+    this.setKeyData(key, data);
+  }
+
+  /**
+   * Flip raw image data to match device settings
+   * @param data raw 32-bit RGBA image data
+   * @returns data flipped as needed
+   */
+  flipKeyData(data: Uint8Array) {
+    if (this.keyFlip.indexOf(true)) {
+      return data;
+    }
+    const newData = new Uint8Array(data.length);
+    // Iterate over pixel rows (top to bottom)
+    for (let y = 0; y < this.keySize[1]; y++) {
+      const iy = y * this.keySize[0] * 4;
+      let offset = iy;
+      // Invert the row offset to vertically flip
+      if (this.keyFlip[1]) {
+        offset = data.length - iy - this.keySize[0] * 4;
+      }
+      const row = data.slice(iy, iy + this.keySize[0] * 4);
+      if (this.keyFlip[0]) {
+        // Reverse the row to horizontally flip
+        for (let x = 0; x < this.keySize[0]; x++) {
+          const ix = iy + (this.keySize[0] - 1 - x) * 4;
+          row.set(data.slice(ix, ix + 4), x * 4);
+        }
+      }
+      newData.set(row, offset);
+    }
+    return newData;
   }
 }
