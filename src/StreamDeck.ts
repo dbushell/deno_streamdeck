@@ -21,7 +21,7 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Create a new StreamDeck instance
-   * @param type a known device type
+   * @param {DeckType} type - a known device type
    */
   constructor(type: DeckType) {
     super();
@@ -86,14 +86,14 @@ export class StreamDeck extends EventTarget {
   }
 
   /**
-   * True if device was opened
+   * Returns true if device was opened
    */
   get isOpen(): boolean {
     return this.hid !== 0n;
   }
 
   /**
-   * True is device was opened and is connected
+   * Returns true is device was opened and is connected
    */
   get isConnected(): boolean {
     if (!this.isOpen) return false;
@@ -133,7 +133,7 @@ export class StreamDeck extends EventTarget {
   /**
    * Close the Stream Deck device and exit HIDAPI
    * (`close` event is dispatched on disconnection)
-   * @returns true if the connected device was closed
+   * @returns {boolean} true if the connected device was closed
    */
   close(): boolean {
     clearTimeout(this.#conTimeout);
@@ -150,7 +150,7 @@ export class StreamDeck extends EventTarget {
     return wasConnected;
   }
 
-  #onOpen() {
+  #onOpen(): void {
     // Get firmware from feature report
     const [length, offset, ...arr] = this.info.firmwareReport;
     const data = new Uint8Array(length);
@@ -168,8 +168,29 @@ export class StreamDeck extends EventTarget {
     }, this.#conRate);
   }
 
-  #onClose() {
+  #onClose(): void {
     // Do nothing...
+  }
+
+  /**
+   * Convert key index to X/Y coordinates
+   * @param {number} key - key index
+   * @returns {Array} X/Y coordinates
+   */
+  getKeyXY(key: number): [number, number] {
+    const x = key % this.keyLayout[0];
+    const y = (key - x) / this.keyLayout[0];
+    return [x, y];
+  }
+
+  /**
+   * Convert X/Y coordinates to key index
+   * @param {number} x - X position of the key
+   * @param {number} y - Y position of the key
+   * @returns {number} key index
+   */
+  getKeyIndex(x: number, y: number): number {
+    return y * this.keyLayout[0] + x;
   }
 
   /**
@@ -184,7 +205,7 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Set Stream Deck display brightness
-   * @param percent brightness percentage (0–100)
+   * @param {number} percent - brightness percentage (0–100)
    */
   brightness(percent: number): void {
     const [length, , ...arr] = this.info.brightnessReport;
@@ -195,8 +216,8 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Set an individual Stream Deck key image
-   * @param key 0-based key index
-   * @param data raw 32-bit RGBA image data
+   * @param {number} key - zero-based key index
+   * @param {Uint8Array} data - raw 32-bit RGBA image data
    */
   setKeyData(key: number, data: Uint8Array): void {
     if (key < 0 || key >= this.keyCount) {
@@ -228,6 +249,7 @@ export class StreamDeck extends EventTarget {
       const length = Math.min(remaining, maxLength);
       const sent = count * maxLength;
       const header = new Uint8Array(headerLength);
+      // TODO: Original and Mini have different header formats
       header.set([
         0x02,
         0x07,
@@ -249,8 +271,8 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Set an individual Stream Deck key image
-   * @param key 0-based key index
-   * @param path full path to the JPEG image file
+   * @param {number} key - zero-based key index
+   * @param {string} path - full path to the JPEG image file
    */
   setKeyJpeg(key: number, path: string): void {
     if (this.info.keyImageFormat !== 'JPEG') {
@@ -263,9 +285,10 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Set an individual Stream Deck key image
-   * @param key 0-based key index
-   * @param path full path to the BMP image file
+   * @param {number} key - zero-based key index
+   * @param {string} path - full path to the BMP image file
    */
+  // deno-lint-ignore no-unused-vars
   setKeyBitmap(key: number, path: string): void {
     if (this.info.keyImageFormat !== 'BMP') {
       throw new Error('Device does not support Bitmap format');
@@ -275,8 +298,8 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Flip raw image data to match device settings
-   * @param data raw 32-bit RGBA image data
-   * @returns data flipped as needed
+   * @param {Uint8Array} data - raw 32-bit RGBA image data
+   * @returns {Uint8Array} flipped as needed
    */
   flipKeyData(data: Uint8Array): Uint8Array {
     if (this.keyFlip.indexOf(true)) {
@@ -307,7 +330,7 @@ export class StreamDeck extends EventTarget {
   /**
    * Wait for Stream Deck key input and update key states
    * (`keystates` event is dispatched on input)
-   * @returns true if key states were updated
+   * @returns {Promise} promise resolves true on input
    */
   async readKeys(): Promise<boolean> {
     try {
@@ -328,7 +351,7 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Wait for Stream Deck key input and yield key states
-   * @yields key states
+   * @yields {Array} key states
    */
   async *listenKeys(): AsyncGenerator<boolean[]> {
     while (this.isOpen) {
