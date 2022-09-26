@@ -197,6 +197,7 @@ export class StreamDeck extends EventTarget {
    * Reset the Stream Deck
    */
   reset(): void {
+    if (!this.isOpen) return;
     const [length, , ...arr] = this.info.resetReport;
     const data = new Uint8Array(length);
     data.set(arr, 0);
@@ -208,6 +209,7 @@ export class StreamDeck extends EventTarget {
    * @param {number} percent - brightness percentage (0–100)
    */
   brightness(percent: number): void {
+    if (!this.isOpen) return;
     const [length, , ...arr] = this.info.brightnessReport;
     const data = new Uint8Array(length);
     data.set([...arr, Math.max(0, Math.min(100, percent))], 0);
@@ -220,6 +222,7 @@ export class StreamDeck extends EventTarget {
    * @param {Uint8Array} data - raw 32-bit RGBA image data
    */
   setKeyData(key: number, data: Uint8Array): void {
+    if (!this.isOpen) return;
     if (key < 0 || key >= this.keyCount) {
       throw new RangeError('Key index out of range');
     }
@@ -333,6 +336,7 @@ export class StreamDeck extends EventTarget {
    * @returns {Promise} promise resolves true on input
    */
   async readKeys(): Promise<boolean> {
+    if (!this.isOpen) return false;
     try {
       const read = await HID.read(
         this.hid,
@@ -360,10 +364,8 @@ export class StreamDeck extends EventTarget {
           }
           this.#keyStates[key] = 0;
         }
-        // this.#keyStates[i] = Boolean(state);
       });
       events.forEach((event) => this.dispatchEvent(event));
-      // this.dispatchEvent();
       return true;
     } catch {
       // Device was probably disconnected
