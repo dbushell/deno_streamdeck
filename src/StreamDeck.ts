@@ -12,7 +12,7 @@ export class StreamDeck extends EventTarget {
   #info: DeckInfo;
   #hidInfo: HIDInfo | null;
 
-  #keyStates: boolean[];
+  #keyStates: number[];
   #keyBlank: Uint8Array;
 
   #conTimeout = 0;
@@ -31,7 +31,7 @@ export class StreamDeck extends EventTarget {
     this.#hid = 0n;
 
     // Set default off state for all keys
-    this.#keyStates = Array(this.keyCount).fill(false);
+    this.#keyStates = Array(this.keyCount).fill(0);
 
     // Generate black image data for off state
     this.#keyBlank = new Uint8Array(this.keySize[0] * this.keySize[1] * 4);
@@ -78,7 +78,7 @@ export class StreamDeck extends EventTarget {
   }
 
   get keyStates(): boolean[] {
-    return [...this.#keyStates];
+    return this.#keyStates.map(Boolean);
   }
 
   get keyBlank(): Uint8Array {
@@ -338,10 +338,32 @@ export class StreamDeck extends EventTarget {
         this.hid,
         this.info.keyStateOffset + this.keyCount
       );
-      read.subarray(4).forEach((value, i) => {
-        this.#keyStates[i] = Boolean(value);
+      const events = [new CustomEvent('keystates')];
+      read.subarray(4).forEach((pressed, key) => {
+        if (pressed) {
+          // Start time event if key not already pressed
+          if (!this.#keyStates[key]) {
+            this.#keyStates[key] = performance.now();
+            events.push(new CustomEvent('keydown', {detail: {key, delay: 0}}));
+          }
+        } else {
+          // End time event if key was released
+          if (this.#keyStates[key]) {
+            events.push(
+              new CustomEvent('keyup', {
+                detail: {
+                  key,
+                  delay: performance.now() - this.#keyStates[key]
+                }
+              })
+            );
+          }
+          this.#keyStates[key] = 0;
+        }
+        // this.#keyStates[i] = Boolean(state);
       });
-      this.dispatchEvent(new CustomEvent('keystates'));
+      events.forEach((event) => this.dispatchEvent(event));
+      // this.dispatchEvent();
       return true;
     } catch {
       // Device was probably disconnected
@@ -353,10 +375,19 @@ export class StreamDeck extends EventTarget {
    * Wait for Stream Deck key input and yield key states
    * @yields {Array} key states
    */
-  async *listenKeys(): AsyncGenerator<boolean[]> {
+  async *iterateKeys(): AsyncGenerator<boolean[]> {
     while (this.isOpen) {
       const success = await this.readKeys();
       if (success) yield this.keyStates;
+    }
+  }
+
+  /**
+   * Wait for Stream Deck key input and trigger events
+   */
+  async listenKeys(): Promise<void> {
+    while (this.isOpen) {
+      await this.readKeys();
     }
   }
 }

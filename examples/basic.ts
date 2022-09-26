@@ -19,9 +19,13 @@ streamDeck.addEventListener('disconnect', () => {
   console.log('Stream Deck disconnected (auto-reconnect)');
 });
 
-streamDeck.addEventListener('keystates', () => {
-  console.log('Stream Deck key states updated');
-});
+streamDeck.addEventListener('keydown', ((ev: CustomEvent) => {
+  console.log('keydown', ev.detail);
+}) as EventListener);
+
+streamDeck.addEventListener('keyup', ((ev: CustomEvent) => {
+  console.log('keyup', ev.detail);
+}) as EventListener);
 
 await new Promise((resolve) => {
   streamDeck.addEventListener(
@@ -58,8 +62,8 @@ setTimeout(async () => {
     console.log(streamDeck.keyStates);
   }
   console.log('Test listen keys');
-  for await (const states of streamDeck.listenKeys()) {
-    console.log(states);
+  for await (const keys of streamDeck.iterateKeys()) {
+    console.log(keys);
   }
 }, 4000);
 
