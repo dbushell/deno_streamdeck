@@ -1,12 +1,14 @@
 import {HID, HIDInfo} from 'https://deno.land/x/deno_usbhidapi@v0.2.1/mod.ts';
 import JPEG from 'https://cdn.skypack.dev/jpeg-js?dts';
-import {DeckInfo} from './types.ts';
+import {DeckType, DeckInfo} from './types.ts';
+import {deckInfo} from './deckInfo.ts';
 
 export class StreamDeck extends EventTarget {
   // HIDAPI pointer
   #hid: bigint;
 
   // Device and HIDAPI information
+  #type: DeckType;
   #info: DeckInfo;
   #hidInfo: HIDInfo | null;
 
@@ -19,26 +21,20 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Create a new StreamDeck instance
-   * @param info a known device
+   * @param type a known device type
    */
-  constructor(info: DeckInfo) {
+  constructor(type: DeckType) {
     super();
-    this.#info = {...info};
+    this.#type = type;
+    this.#info = {...deckInfo[type]};
     this.#hidInfo = null;
     this.#hid = 0n;
 
     // Set default off state for all keys
     this.#keyStates = Array(this.keyCount).fill(false);
 
-    // Generate black image for off state
-    this.#keyBlank = JPEG.encode(
-      {
-        width: this.keySize[0],
-        height: this.keySize[1],
-        data: new Uint8Array(this.keySize[0] * this.keySize[1] * 4)
-      },
-      100
-    ).data;
+    // Generate black image data for off state
+    this.#keyBlank = new Uint8Array(this.keySize[0] * this.keySize[1] * 4);
 
     // Add event listeners
     this.addEventListener('open', this.#onOpen);
@@ -47,6 +43,10 @@ export class StreamDeck extends EventTarget {
 
   get hid(): bigint {
     return this.#hid;
+  }
+
+  get type(): DeckType {
+    return this.#type;
   }
 
   get info(): DeckInfo {
@@ -202,6 +202,24 @@ export class StreamDeck extends EventTarget {
     if (key < 0 || key >= this.keyCount) {
       throw new RangeError('Key index out of range');
     }
+    // Flip the image as per the device
+    data = this.flipKeyData(data);
+    // Always re-encode to ensure correct format
+    switch (this.info.keyImageFormat) {
+      case 'BMP':
+        throw new Error('Bitmap support not implemented');
+      case 'JPEG':
+        data = JPEG.encode(
+          {
+            width: this.keySize[0],
+            height: this.keySize[1],
+            data
+          },
+          100
+        ).data;
+        break;
+    }
+    // Write data to device in chunks
     const [reportLength, headerLength] = this.#info.reportSize;
     const maxLength = reportLength - headerLength;
     let count = 0;
@@ -209,7 +227,8 @@ export class StreamDeck extends EventTarget {
     while (remaining > 0) {
       const length = Math.min(remaining, maxLength);
       const sent = count * maxLength;
-      const header = Uint8Array.from([
+      const header = new Uint8Array(headerLength);
+      header.set([
         0x02,
         0x07,
         key,
@@ -234,14 +253,24 @@ export class StreamDeck extends EventTarget {
    * @param path full path to the JPEG image file
    */
   setKeyJpeg(key: number, path: string): void {
-    // Decode the JPEG file
+    if (this.info.keyImageFormat !== 'JPEG') {
+      throw new Error('Device does not support JPEG format');
+    }
     const file = Deno.readFileSync(path);
     const jpeg = JPEG.decode(file);
-    // Flip the image as per the device
-    let data = this.flipKeyData(jpeg.data);
-    // Always re-encode to ensure correct format
-    data = JPEG.encode({...jpeg, data}, 100).data;
-    this.setKeyData(key, data);
+    this.setKeyData(key, jpeg.data);
+  }
+
+  /**
+   * Set an individual Stream Deck key image
+   * @param key 0-based key index
+   * @param path full path to the BMP image file
+   */
+  setKeyBitmap(key: number, path: string): void {
+    if (this.info.keyImageFormat !== 'BMP') {
+      throw new Error('Device does not support Bitmap format');
+    }
+    throw new Error('Bitmap support not implemented');
   }
 
   /**

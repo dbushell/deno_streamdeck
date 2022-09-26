@@ -1,7 +1,7 @@
-import {DeckInfo} from './types.ts';
+import {DeckType, DeckInfo} from './types.ts';
 
-export const devices: {[key: string]: DeckInfo} = {
-  mini: {
+export const deckInfo: {[key in DeckType]: DeckInfo} = {
+  [DeckType.MINI]: {
     vendorId: 0x0fd9,
     productId: 0x0063,
     keyCount: 6,
@@ -16,7 +16,7 @@ export const devices: {[key: string]: DeckInfo} = {
     resetReport: [17, 0, 0x0b, 0x63],
     brightnessReport: [17, 0, 0x05, 0x55, 0xaa, 0xd1, 0x01]
   },
-  original: {
+  [DeckType.ORIGINAL]: {
     vendorId: 0x0fd9,
     productId: 0x0060,
     keyCount: 15,
@@ -31,7 +31,7 @@ export const devices: {[key: string]: DeckInfo} = {
     resetReport: [17, 0, 0x0b, 0x63],
     brightnessReport: [17, 0, 0x05, 0x55, 0xaa, 0xd1, 0x01]
   },
-  mk2: {
+  [DeckType.MK2]: {
     vendorId: 0x0fd9,
     productId: 0x0080,
     keyCount: 15,
@@ -46,7 +46,7 @@ export const devices: {[key: string]: DeckInfo} = {
     resetReport: [32, 0, 0x03, 0x02],
     brightnessReport: [32, 0, 0x03, 0x08]
   },
-  xl: {
+  [DeckType.XL]: {
     vendorId: 0x0fd9,
     productId: 0x006c,
     keyCount: 32,

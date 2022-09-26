@@ -2,9 +2,10 @@
 Deno.env.set('DENO_USBHIDAPI', '/opt/homebrew/opt/hidapi/lib/libhidapi.dylib');
 
 // Dynamic import to set environment variable before module
-const {devices, StreamDeck} = await import('../mod.ts');
+const {StreamDeck} = await import('../mod.ts');
+import {DeckType} from '../src/types.ts';
 
-const streamDeck = new StreamDeck(devices.mk2);
+const streamDeck = new StreamDeck(DeckType.MK2);
 
 streamDeck.addEventListener('open', () => {
   console.debug('Stream Deck open');

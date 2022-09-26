@@ -1,3 +1,10 @@
+export enum DeckType {
+  MINI = 'Stream Deck Mini',
+  ORIGINAL = 'Stream Deck Original',
+  MK2 = 'Stream Deck MK.2',
+  XL = 'Stream Deck XL'
+}
+
 export type DeckInfoReport = readonly [
   length: number,
   offset: number,
