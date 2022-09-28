@@ -305,29 +305,25 @@ export class StreamDeck extends EventTarget {
    * @returns {Uint8Array} flipped as needed
    */
   flipKeyData(data: Uint8Array): Uint8Array {
-    if (this.keyFlip.indexOf(true)) {
+    if (this.keyFlip.indexOf(true) < 0) {
       return data;
     }
-    const newData = new Uint8Array(data.length);
+    // Use 32-bit array for easier pixel counts
+    const oldData = new Uint32Array(data.buffer);
+    const newData = new Uint32Array(oldData.length);
     // Iterate over pixel rows (top to bottom)
     for (let y = 0; y < this.keySize[1]; y++) {
-      const iy = y * this.keySize[0] * 4;
-      let offset = iy;
+      let offset = y * this.keySize[0];
       // Invert the row offset to vertically flip
       if (this.keyFlip[1]) {
-        offset = data.length - iy - this.keySize[0] * 4;
+        offset = oldData.length - (y + 1) * this.keySize[0];
       }
-      const row = data.slice(iy, iy + this.keySize[0] * 4);
-      if (this.keyFlip[0]) {
-        // Reverse the row to horizontally flip
-        for (let x = 0; x < this.keySize[0]; x++) {
-          const ix = iy + (this.keySize[0] - 1 - x) * 4;
-          row.set(data.slice(ix, ix + 4), x * 4);
-        }
-      }
-      newData.set(row, offset);
+      const row = oldData.subarray(offset, offset + this.keySize[0]);
+      // Reverse the row to horizontally flip
+      if (this.keyFlip[0]) row.reverse();
+      newData.set(row, y * this.keySize[0]);
     }
-    return newData;
+    return new Uint8Array(newData.buffer);
   }
 
   /**
