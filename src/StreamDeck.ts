@@ -251,9 +251,9 @@ export class StreamDeck extends EventTarget {
     while (remaining > 0) {
       const length = Math.min(remaining, maxLength);
       const sent = count * maxLength;
-      const header = new Uint8Array(headerLength);
       // TODO: Original and Mini have different header formats
-      header.set([
+      const payload = new Uint8Array(reportLength);
+      payload.set([
         0x02,
         0x07,
         key,
@@ -263,9 +263,7 @@ export class StreamDeck extends EventTarget {
         count & 0xff,
         count >> 8
       ]);
-      const payload = new Uint8Array(reportLength);
-      payload.set(header);
-      payload.set(data.subarray(sent, sent + length), header.length);
+      payload.set(data.subarray(sent, sent + length), headerLength);
       HID.write(this.hid, payload);
       remaining -= length;
       count++;
