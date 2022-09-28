@@ -316,7 +316,7 @@ export class StreamDeck extends EventTarget {
       if (this.keyFlip[1]) {
         offset = oldData.length - (y + 1) * this.keySize[0];
       }
-      const row = oldData.subarray(offset, offset + this.keySize[0]);
+      const row = oldData.slice(offset, offset + this.keySize[0]);
       // Reverse the row to horizontally flip
       if (this.keyFlip[0]) row.reverse();
       newData.set(row, y * this.keySize[0]);
