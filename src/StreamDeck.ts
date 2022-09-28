@@ -13,7 +13,9 @@ export class StreamDeck extends EventTarget {
   #hidInfo: HIDInfo | null;
 
   #keyStates: number[];
+  #keyIds: (symbol | null)[];
   #keyBlank: Uint8Array;
+  #keyBlankId = Symbol('blank');
 
   #conTimeout = 0;
   #conInterval = 0;
@@ -32,6 +34,7 @@ export class StreamDeck extends EventTarget {
 
     // Set default off state for all keys
     this.#keyStates = Array(this.keyCount).fill(0);
+    this.#keyIds = Array(this.keyCount).fill(null);
 
     // Generate black image data for off state
     this.#keyBlank = new Uint8Array(this.keySize[0] * this.keySize[1] * 4);
@@ -83,6 +86,10 @@ export class StreamDeck extends EventTarget {
 
   get keyBlank(): Uint8Array {
     return this.#keyBlank;
+  }
+
+  get keyBlankId(): symbol {
+    return this.#keyBlankId;
   }
 
   /**
@@ -220,14 +227,32 @@ export class StreamDeck extends EventTarget {
    * Set an individual Stream Deck key image
    * @param {number} key - zero-based key index
    * @param {Uint8Array} data - raw 32-bit RGBA image data
+   * @param {symbol} id - unique ID to avoid rewriting the same data
    */
-  setKeyData(key: number, data: Uint8Array): void {
+  setKeyData(
+    key: number,
+    data: Uint8Array = this.keyBlank,
+    id: symbol | null = null
+  ): void {
     if (!this.isOpen) return;
     if (key < 0 || key >= this.keyCount) {
       throw new RangeError('Key index out of range');
     }
-    // Flip the image as per the device
-    data = this.flipKeyData(data);
+    if (data.length < 4 * this.keySize[0] * this.keySize[1]) {
+      throw new Error('Image data incorrect size');
+    }
+    // Check unique ID against previous write
+    if (data === this.keyBlank) {
+      id = this.keyBlankId;
+    }
+    if (id && this.#keyIds[key] === id) {
+      return;
+    }
+    this.#keyIds[key] = id;
+    // Flip the image as per the device if not blank
+    if (!id || id !== this.keyBlankId) {
+      data = this.flipKeyData(data);
+    }
     // Always re-encode to ensure correct format
     switch (this.info.keyImageFormat) {
       case 'BMP':
