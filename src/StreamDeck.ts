@@ -8,7 +8,7 @@ export class StreamDeck extends EventTarget {
   #hid: bigint;
 
   // Device and HIDAPI information
-  #type: DeckType;
+  #type: DeckType | string;
   #info: DeckInfo;
   #hidInfo: HIDInfo | null;
 
@@ -23,12 +23,19 @@ export class StreamDeck extends EventTarget {
 
   /**
    * Create a new StreamDeck instance
-   * @param {DeckType} type - a known device type
+   * @param {DeckType | string} type - a known device type
+   * @param {DeckInfo} info - (optional) custom device information
    */
-  constructor(type: DeckType) {
+  constructor(type: DeckType | string, info?: DeckInfo) {
     super();
     this.#type = type;
-    this.#info = {...deckInfo[type]};
+    if (Object.hasOwn(deckInfo, type)) {
+      this.#info = {...deckInfo[type as DeckType], ...info};
+    } else if (info) {
+      this.#info = {...info};
+    } else {
+      throw new Error('Unknown device type or info');
+    }
     this.#hidInfo = null;
     this.#hid = 0n;
 
@@ -48,7 +55,7 @@ export class StreamDeck extends EventTarget {
     return this.#hid;
   }
 
-  get type(): DeckType {
+  get type(): string {
     return this.#type;
   }
 
