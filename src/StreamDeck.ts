@@ -1,4 +1,4 @@
-import {HID, HIDInfo} from 'https://deno.land/x/deno_usbhidapi@v0.2.1/mod.ts';
+import {hid, HIDInfo} from 'https://deno.land/x/deno_usbhidapi@v0.3.2/mod.ts';
 import JPEG from 'https://cdn.skypack.dev/jpeg-js?dts';
 import {DeckType, DeckInfo} from './types.ts';
 import {deckInfo} from './deckInfo.ts';
@@ -111,7 +111,7 @@ export class StreamDeck extends EventTarget {
    */
   get isConnected(): boolean {
     if (!this.isOpen) return false;
-    const devices = HID.enumerate(this.info.vendorId, this.info.productId);
+    const devices = hid.enumerate(this.info.vendorId, this.info.productId);
     return devices.length > 0;
   }
 
@@ -123,13 +123,13 @@ export class StreamDeck extends EventTarget {
     // Ensure previous device is closed
     this.close();
     // Initialize HID
-    HID.init();
+    hid.init();
     // Find and setup device through enumeration
     const {vendorId, productId} = this.info;
-    const devices = HID.enumerate(vendorId, productId);
+    const devices = hid.enumerate(vendorId, productId);
     const found = devices.find((hidInfo) => {
       if (hidInfo.vendorId === vendorId && hidInfo.productId === productId) {
-        this.#hid = HID.open(vendorId, productId);
+        this.#hid = hid.open(vendorId, productId);
         this.#hidInfo = {...hidInfo};
         return true;
       }
@@ -154,10 +154,10 @@ export class StreamDeck extends EventTarget {
     clearInterval(this.#conInterval);
     const wasConnected = this.isConnected;
     if (wasConnected) {
-      HID.close(this.hid);
+      hid.close(this.hid);
     }
     this.#hid = 0n;
-    HID.exit();
+    hid.exit();
     if (wasConnected) {
       this.dispatchEvent(new CustomEvent('close'));
     }
@@ -169,7 +169,7 @@ export class StreamDeck extends EventTarget {
     const [length, offset, ...arr] = this.info.firmwareReport;
     const data = new Uint8Array(length);
     data.set(arr, 0);
-    HID.getFeatureReport(this.hid, data);
+    hid.getFeatureReport(this.hid, data);
     this.#info.firmware = new TextDecoder().decode(
       data.subarray(offset, data.indexOf(0))
     );
@@ -215,7 +215,7 @@ export class StreamDeck extends EventTarget {
     const [length, , ...arr] = this.info.resetReport;
     const data = new Uint8Array(length);
     data.set(arr, 0);
-    HID.sendFeatureReport(this.hid, data);
+    hid.sendFeatureReport(this.hid, data);
   }
 
   /**
@@ -227,7 +227,7 @@ export class StreamDeck extends EventTarget {
     const [length, , ...arr] = this.info.brightnessReport;
     const data = new Uint8Array(length);
     data.set([...arr, Math.max(0, Math.min(100, percent))], 0);
-    HID.sendFeatureReport(this.hid, data);
+    hid.sendFeatureReport(this.hid, data);
   }
 
   /**
@@ -296,7 +296,7 @@ export class StreamDeck extends EventTarget {
         count >> 8
       ]);
       payload.set(data.subarray(sent, sent + length), headerLength);
-      HID.write(this.hid, payload);
+      hid.write(this.hid, payload);
       remaining -= length;
       count++;
     }
@@ -364,7 +364,7 @@ export class StreamDeck extends EventTarget {
   async readKeys(): Promise<boolean> {
     if (!this.isOpen) return false;
     try {
-      const read = await HID.read(
+      const read = await hid.read(
         this.hid,
         this.info.keyStateOffset + this.keyCount
       );
