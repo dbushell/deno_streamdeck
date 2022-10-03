@@ -152,16 +152,16 @@ export class StreamDeck extends EventTarget {
   close(): boolean {
     clearTimeout(this.#conTimeout);
     clearInterval(this.#conInterval);
-    const wasConnected = this.isConnected;
-    if (wasConnected) {
+    const wasOpen = this.isOpen;
+    if (wasOpen) {
       hid.close(this.hid);
     }
     this.#hid = 0n;
     hid.exit();
-    if (wasConnected) {
+    if (wasOpen) {
       this.dispatchEvent(new CustomEvent('close'));
     }
-    return wasConnected;
+    return wasOpen;
   }
 
   #onOpen(): void {
