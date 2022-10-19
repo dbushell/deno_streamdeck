@@ -51,7 +51,7 @@ setTimeout(() => {
   streamDeck.open();
   streamDeck.reset();
   streamDeck.brightness(100);
-  const {pathname} = new URL('72x72.jpg', import.meta.url);
+  const {pathname} = new URL('assets/calculator.jpg', import.meta.url);
   streamDeck.setKeyJpeg(7, pathname);
 }, 2000);
 

@@ -7,6 +7,9 @@
 examples/*
 !examples/*.ts
 !examples/*.jpg
+!examples/assets
+examples/assets/*
+!examples/assets/*.jpg
 !src/
 src/*
 !src/*.ts
