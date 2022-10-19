@@ -77,7 +77,7 @@ export class AppDeck extends StreamDeck {
   #onKeyDown(ev: CustomEvent) {
     const {key} = ev.detail;
     if (this.activeApp) {
-      ev.detail.app = this.activeApp.uuid;
+      ev.detail.uuid = this.activeApp.uuid;
       if (key === super.keyLayout[0] - 1) {
         ev.stopImmediatePropagation();
         return;
@@ -96,7 +96,7 @@ export class AppDeck extends StreamDeck {
   #onKeyUp(ev: CustomEvent) {
     const {key} = ev.detail;
     if (this.activeApp) {
-      ev.detail.app = this.activeApp.uuid;
+      ev.detail.uuid = this.activeApp.uuid;
       // Return to menu if top-right key is pressed
       if (key === super.keyLayout[0] - 1) {
         ev.stopImmediatePropagation();
