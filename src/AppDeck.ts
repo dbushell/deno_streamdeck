@@ -20,6 +20,9 @@ export class AppDeck extends StreamDeck {
   #icons: Map<string, Uint8Array> = new Map();
   #apps: Map<string, App> = new Map();
   #activeApp = '';
+  #dimTimer = 0;
+  #dimDelay = 60000;
+  #dimActive = false;
 
   /**
    * Create a new AppDeck instance
@@ -33,6 +36,7 @@ export class AppDeck extends StreamDeck {
       super.keyCount * super.keySize[0] * super.keySize[1] * 4
     );
     this.addEventListener('open', this.#onOpen);
+    this.addEventListener('close', this.#onClose);
     this.addEventListener('keydown', this.#onKeyDown as EventListener);
     this.addEventListener('keyup', this.#onKeyUp as EventListener);
     super.open();
@@ -68,13 +72,25 @@ export class AppDeck extends StreamDeck {
   #onOpen = async (): Promise<void> => {
     super.reset();
     this.showMenu();
+    this.#startDimmer();
     await super.listenKeys();
   };
+
+  /**
+   * Handle `close` event
+   */
+  #onClose() {
+    this.#endDimmer();
+  }
 
   /**
    * Handle `keydown` event
    */
   #onKeyDown(ev: CustomEvent) {
+    if (this.#dimActive) {
+      ev.stopImmediatePropagation();
+      return;
+    }
     const {key} = ev.detail;
     if (this.activeApp) {
       ev.detail.uuid = this.activeApp.uuid;
@@ -94,6 +110,12 @@ export class AppDeck extends StreamDeck {
    * Handle `keyup` event
    */
   #onKeyUp(ev: CustomEvent) {
+    if (this.#dimActive) {
+      ev.stopImmediatePropagation();
+      this.#endDimmer();
+      return;
+    }
+    this.#startDimmer();
     const {key} = ev.detail;
     if (this.activeApp) {
       ev.detail.uuid = this.activeApp.uuid;
@@ -112,6 +134,22 @@ export class AppDeck extends StreamDeck {
     ev.stopImmediatePropagation();
     if (key < this.#apps.size) {
       this.showApp([...this.#apps.keys()][key]);
+    }
+  }
+
+  #startDimmer(): void {
+    clearTimeout(this.#dimTimer);
+    this.#dimTimer = setTimeout(() => {
+      this.#dimActive = true;
+      this.brightness(0);
+    }, this.#dimDelay);
+  }
+
+  #endDimmer(): void {
+    clearTimeout(this.#dimTimer);
+    this.#dimActive = false;
+    if (this.isOpen) {
+      this.brightness(20);
     }
   }
 
