@@ -141,15 +141,15 @@ export class AppDeck extends StreamDeck {
     clearTimeout(this.#dimTimer);
     this.#dimTimer = setTimeout(() => {
       this.#dimActive = true;
-      this.brightness(0);
+      super.brightness(0);
     }, this.#dimDelay);
   }
 
   #endDimmer(): void {
     clearTimeout(this.#dimTimer);
     this.#dimActive = false;
-    if (this.isOpen) {
-      this.brightness(20);
+    if (super.isOpen) {
+      super.brightness(20);
     }
   }
 
