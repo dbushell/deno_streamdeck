@@ -1,4 +1,4 @@
-import {hid, HIDInfo} from 'https://deno.land/x/deno_usbhidapi@v0.3.3/mod.ts';
+import {hid, HIDInfo} from 'https://deno.land/x/deno_usbhidapi@v0.4.0/mod.ts';
 import JPEG from 'https://cdn.skypack.dev/jpeg-js?dts';
 import {DeckType, DeckInfo} from './types.ts';
 import {deckInfo} from './deckInfo.ts';
