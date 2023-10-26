@@ -175,12 +175,10 @@ export class AppDeck extends StreamDeck {
     if (!this.#apps.has(uuid)) {
       return false;
     }
-    const start = performance.now();
     this.#activeApp = uuid;
     for (let k = 0; k < super.keyCount; k++) {
       this.setAppKey(k);
     }
-    console.log(performance.now() - start);
     return true;
   }
 
