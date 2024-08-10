@@ -14,10 +14,6 @@ I've only tested the **Stream Deck MK.2**. I have no plans to test other devices
 * [Python Elgato Stream Deck Library](https://github.com/abcminiuser/python-elgato-streamdeck/) — original inspiration for this project.
 * [deno_python](https://github.com/denosaurs/deno_python) — Python interpreter bindings for Deno.
 
-## License
-
-MIT License
-
 * * *
 
-[MIT License](/LICENSE) | Copyright © 2023 [David Bushell](https://dbushell.com) | [@dbushell](https://twitter.com/dbushell)
+[MIT License](/LICENSE) | Copyright © 2023 [David Bushell](https://dbushell.com)
